@@ -1,7 +1,7 @@
 # 前端 Vue 项目构建
-FROM registry.cn-hangzhou.aliyuncs.com/geekmaster/nginx:1.20.2
+FROM crpi-1rhmnyrson8h7iaj.ap-southeast-1.personal.cr.aliyuncs.com/charles_jan/nginx:1.20.2
 
-MAINTAINER yangjian<yangjian102621@163.com>
+MAINTAINER charles_jan<527091041@qq.com>
 
 WORKDIR /var/www/app
 COPY ./web/dist /var/www/app/dist

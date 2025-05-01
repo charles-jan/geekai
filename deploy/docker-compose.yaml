@@ -2,8 +2,8 @@ version: '3'
 services:
   # mysql
   geekai-mysql:
-    image: registry.cn-shenzhen.aliyuncs.com/geekmaster/mysql:8.0.33
-    container_name: geekai-mysql
+    image: crpi-1rhmnyrson8h7iaj.ap-southeast-1.personal.cr.aliyuncs.com/charles_jan/mysql:8.0.33
+    container_name: dapianke-mysql
     command: --default-authentication-plugin=mysql_native_password
     restart: always
     environment:
@@ -23,9 +23,9 @@ services:
 
   # redis
   geekai-redis:
-    image: registry.cn-shenzhen.aliyuncs.com/geekmaster/redis:6.0.6
+    image: crpi-1rhmnyrson8h7iaj.ap-southeast-1.personal.cr.aliyuncs.com/charles_jan/redis:6.0.6
     restart: always
-    container_name: geekai-redis
+    container_name: dapianke-redis
     command: redis-server --requirepass mhSCk0NheGhmtsha
     volumes:
       - ./data/redis:/data
@@ -39,7 +39,7 @@ services:
 
   #  xxl-job-admin:
   #    container_name: geekai-xxl-job-admin
-  #    image: registry.cn-shenzhen.aliyuncs.com/geekmaster/xxl-job-admin:2.4.0
+  #    image: crpi-1rhmnyrson8h7iaj.ap-southeast-1.personal.cr.aliyuncs.com/charles_jan/xxl-job-admin:2.4.0
   #    restart: always
   #    ports:
   #      - "8081:8080"
@@ -50,14 +50,14 @@ services:
   #      - ./conf/xxl-job/application.properties:/application.properties
 
   tika:
-    image: registry.cn-shenzhen.aliyuncs.com/geekmaster/tika:latest
-    container_name: tika
+    image: crpi-1rhmnyrson8h7iaj.ap-southeast-1.personal.cr.aliyuncs.com/charles_jan/tika:latest
+    container_name: dapianke-tika
     restart: always
     ports:
       - '9998:9998'
 
   #  midjourney-proxy:
-  #    image: registry.cn-shenzhen.aliyuncs.com/geekmaster/midjourney-proxy:2.6.2
+  #    image: crpi-1rhmnyrson8h7iaj.ap-southeast-1.personal.cr.aliyuncs.com/charles_jan/midjourney-proxy:2.6.2
   #    container_name: geekai-midjourney-proxy
   #    restart: always
   #    ports:
@@ -67,8 +67,8 @@ services:
 
   # 后端 API 程序
   geekai-api:
-    image: registry.cn-shenzhen.aliyuncs.com/geekmaster/geekai-api:v4.1.8-amd64
-    container_name: geekai-api
+    image: crpi-1rhmnyrson8h7iaj.ap-southeast-1.personal.cr.aliyuncs.com/charles_jan/geekai-api:v4.1.8-amd64
+    container_name: dapianke-api
     restart: always
     depends_on:
       geekai-mysql:
@@ -91,12 +91,14 @@ services:
 
   # 前端应用
   geekai-web:
-    image: registry.cn-shenzhen.aliyuncs.com/geekmaster/geekai-web:v4.1.8-amd64
-    container_name: geekai-web
+    image: crpi-1rhmnyrson8h7iaj.ap-southeast-1.personal.cr.aliyuncs.com/charles_jan/geekai-web:v4.1.8-amd64
+    container_name: dapianke-web
     restart: always
     depends_on:
       - geekai-api
     ports:
+      - '80:8080'
+      - '443:443'
       - '8080:8080'
     volumes:
       - ./logs/nginx:/var/log/nginx

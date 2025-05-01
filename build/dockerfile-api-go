@@ -1,7 +1,7 @@
 # GO api docker 镜像创建
-FROM registry.cn-hangzhou.aliyuncs.com/geekmaster/alpine:3.18.2
+FROM crpi-1rhmnyrson8h7iaj.ap-southeast-1.personal.cr.aliyuncs.com/charles_jan/alpine:3.18.2
 
-MAINTAINER yangjian<yangjian102621@163.com>
+MAINTAINER charles_jan<527091041@qq.com>
 
 WORKDIR /var/www/app
 COPY ./api/bin/geekai-linux /var/www/app

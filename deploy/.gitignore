@@ -3,3 +3,5 @@ data/leveldb
 logs
 static/*
 redis/redis
+
+conf/nginx/ssl

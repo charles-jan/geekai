@@ -150,7 +150,7 @@
                 </el-form-item>
                 <el-form-item label="会话上下文深度">
                   <div class="tip-input-line">
-                    <el-input-number v-model="system['context_deep']" :min="0" :max="10" />
+                    <el-input-number v-model="system['context_deep']" :min="0" :max="100" />
                     <div class="tip">
                       会话上下文深度：在老会话中继续会话，默认加载多少条聊天记录作为上下文。如果设置为 0
                       则不加载聊天记录，仅仅使用当前角色的上下文。该配置参数必须设置需要为偶数。

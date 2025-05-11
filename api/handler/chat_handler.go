@@ -154,7 +154,7 @@ func (h *ChatHandler) sendMessage(ctx context.Context, session *types.ChatSessio
 				var historyMessages []model.ChatMessage
 				res := h.DB.Where("chat_id = ? and use_context = 1", session.ChatId).Limit(h.App.SysConfig.ContextDeep).Order("id DESC").Find(&historyMessages)
 				if res.Error == nil {
-					for i := len(historyMessages) - 1; i >= 0; i-- {
+					for i := 0; i < len(historyMessages); i++ {
 						msg := historyMessages[i]
 						ms := types.Message{Role: "user", Content: msg.Content}
 						if msg.Type == types.ReplyMsg {
@@ -172,6 +172,29 @@ func (h *ChatHandler) sendMessage(ctx context.Context, session *types.ChatSessio
 		tks, _ := utils.CalcTokens(utils.JsonEncode(req.Tools), req.Model)
 		tokens += tks + promptTokens
 
+		// 步骤 1：先处理 role 的 system 消息，并参与 token 计算
+		var roleSystemMsg *types.Message
+		var roleMsgs []types.Message
+		_ = utils.JsonDecode(role.Context, &roleMsgs)
+		if len(roleMsgs) > 0 && roleMsgs[0].Role == "system" {
+			roleSystemMsg = &roleMsgs[0]
+			tks, _ := utils.CalcTokens(utils.JsonEncode(roleSystemMsg), req.Model)
+			tokens += tks
+			logger.Debugf("found role system message: %+v", roleSystemMsg)
+		}
+
+		// 步骤 2：提取并移除 messages 中的第一个 system 消息（如有）
+		if len(messages) > 0 {
+			if msgMap, ok := messages[0].(map[string]interface{}); ok {
+				// 再从中取 role 字段并判断是否为 system
+				if msgMap["role"] == "system" {
+					messages = messages[1:] // 移除旧的 system 消息
+					logger.Debugf("removed existing system message from messages")
+				}
+			}
+		}
+
+		// 步骤 4：倒序遍历 messages 并加入 chatCtx（排除 system 消息对 ContextDeep 的影响）
 		for i := len(messages) - 1; i >= 0; i-- {
 			v := messages[i]
 			tks, _ = utils.CalcTokens(utils.JsonEncode(v), req.Model)
@@ -189,8 +212,17 @@ func (h *ChatHandler) sendMessage(ctx context.Context, session *types.ChatSessio
 			chatCtx = append(chatCtx, v)
 		}
 
+		// 步骤 5：将 role.systemMsg 添加到 chatCtx 末尾（最终会出现在 prompt 最前面）
+		if roleSystemMsg != nil {
+			chatCtx = append(chatCtx, map[string]interface{}{
+				"role":    "system",
+				"content": roleSystemMsg.Content,
+			})
+		}
+
 		logger.Debugf("聊天上下文：%+v", chatCtx)
 	}
+
 	reqMgs := make([]interface{}, 0)
 
 	for i := len(chatCtx) - 1; i >= 0; i-- {

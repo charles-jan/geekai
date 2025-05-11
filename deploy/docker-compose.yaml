@@ -67,7 +67,7 @@ services:
 
   # 后端 API 程序
   geekai-api:
-    image: crpi-1rhmnyrson8h7iaj.ap-southeast-1.personal.cr.aliyuncs.com/charles_jan/geekai-api:v4.1.8-amd64
+    image: crpi-1rhmnyrson8h7iaj.ap-southeast-1.personal.cr.aliyuncs.com/charles_jan/geekai-api:v4.1.9-amd64
     container_name: dapianke-api
     restart: always
     depends_on:
@@ -91,7 +91,7 @@ services:
 
   # 前端应用
   geekai-web:
-    image: crpi-1rhmnyrson8h7iaj.ap-southeast-1.personal.cr.aliyuncs.com/charles_jan/geekai-web:v4.1.8-amd64
+    image: crpi-1rhmnyrson8h7iaj.ap-southeast-1.personal.cr.aliyuncs.com/charles_jan/geekai-web:v4.1.9-amd64
     container_name: dapianke-web
     restart: always
     depends_on:

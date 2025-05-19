@@ -78,13 +78,13 @@ TikaHost = "http://tika:9998"
 
 # 支付宝商户支付
 [AlipayConfig]
-  Enabled = false # 启用支付宝支付通道
+  Enabled = true # 启用支付宝支付通道
   SandBox = false # 是否启用沙盒模式
-  UserId = "2088721020750581" # 商户ID
-  AppId = "9021000131658023" # App Id
+  UserId = "2088051815657952" # 商户ID
+  AppId = "2021005151608551" # App Id
   PrivateKey = "certs/alipay/privateKey.txt" # 应用私钥
-  PublicKey = "certs/alipay/appPublicCert.crt" # 应用公钥证书
-  AlipayPublicKey = "certs/alipay/alipayPublicCert.crt" # 支付宝公钥证书
+  PublicKey = "certs/alipay/appCertPublicKey.crt" # 应用公钥证书
+  AlipayPublicKey = "certs/alipay/alipayCertPublicKey.crt" # 支付宝公钥证书
   RootCert = "certs/alipay/alipayRootCert.crt" # 支付宝根证书
 
 # 虎皮椒支付
@@ -105,7 +105,7 @@ TikaHost = "http://tika:9998"
 
 # 易支付
 [GeekPayConfig]
-  Enabled = true
+  Enabled = false
   AppId = "" # 商户ID
   PrivateKey = "" # 商户私钥
   ApiURL = "https://pay.geekai.cn"

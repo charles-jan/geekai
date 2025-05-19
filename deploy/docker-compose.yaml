@@ -88,6 +88,7 @@ services:
       - ./logs/app:/var/www/app/logs
       - ./static:/var/www/app/static
       - ./data/leveldb:/var/www/app/data
+      - ./certs:/var/www/app/certs
 
   # 前端应用
   geekai-web:

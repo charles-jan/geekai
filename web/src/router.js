@@ -347,7 +347,8 @@ const router = createRouter({
 let prevRoute = null;
 // dynamic change the title when router change
 router.beforeEach((to, from, next) => {
-  document.title = to.meta.title;
+  let suffix = to.meta.suffix || "上海睿邦米企业管理咨询有限公司";
+  document.title = `${to.meta.title} - ${suffix}`;
   prevRoute = from;
   next();
 });

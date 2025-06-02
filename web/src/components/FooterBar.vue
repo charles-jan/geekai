@@ -10,6 +10,7 @@
           {{ version }}
         </a>
       </div>
+      <a href="https://beian.miit.gov.cn/" target="_blank">沪ICP备2025128033号-1</a>
     </div>
   </div>
 </template>

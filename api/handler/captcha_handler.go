@@ -11,6 +11,7 @@ import (
 	"geekai/core/types"
 	"geekai/service"
 	"geekai/utils/resp"
+
 	"github.com/gin-gonic/gin"
 )
 
@@ -25,27 +26,26 @@ func NewCaptchaHandler(s *service.CaptchaService) *CaptchaHandler {
 }
 
 func (h *CaptchaHandler) Get(c *gin.Context) {
-	data, err := h.service.Get()
+	vo, err := h.service.Get(c)
 	if err != nil {
 		resp.ERROR(c, err.Error())
 		return
 	}
 
-	resp.SUCCESS(c, data)
+	resp.SUCCESS(c, vo)
 }
 
 // Check verify the captcha data
 func (h *CaptchaHandler) Check(c *gin.Context) {
-	var data struct {
-		Key  string `json:"key"`
-		Dots string `json:"dots"`
-	}
+	var data service.CaptchaCheckData
+
 	if err := c.ShouldBindJSON(&data); err != nil {
 		resp.ERROR(c, types.InvalidArgs)
 		return
 	}
 
-	if h.service.Check(data) {
+	logger.Debug(data)
+	if h.service.Check(c, data) {
 		resp.SUCCESS(c)
 	} else {
 		resp.ERROR(c)

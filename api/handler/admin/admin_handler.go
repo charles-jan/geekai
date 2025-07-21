@@ -19,9 +19,10 @@ import (
 	"geekai/store/vo"
 	"geekai/utils"
 	"geekai/utils/resp"
+	"time"
+
 	"github.com/go-redis/redis/v8"
 	"github.com/golang-jwt/jwt/v5"
-	"time"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
@@ -64,7 +65,10 @@ func (h *ManagerHandler) Login(c *gin.Context) {
 		if data.X != 0 {
 			check = h.captcha.SlideCheck(data)
 		} else {
-			check = h.captcha.Check(data)
+			check = h.captcha.Check(c, service.CaptchaCheckData{
+				Key:  data.Key,
+				Dots: data.Dots,
+			})
 		}
 		if !check {
 			resp.ERROR(c, "请先完人机验证")

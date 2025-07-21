@@ -12,7 +12,7 @@
         </el-upload>
       </el-row>
       <el-form-item label="昵称">
-        <el-input v-model="user['nickname']" />
+        <span>{{user.nickname}}</span>
       </el-form-item>
       <el-form-item label="账号">
         <div class="flex">
@@ -30,9 +30,9 @@
         <el-tag type="danger">{{ dateFormat(user["expired_time"]) }}</el-tag>
       </el-form-item>
 
-      <el-row class="opt-line">
-        <el-button :dark="false" type="primary" @click="save">保存</el-button>
-      </el-row>
+<!--      <el-row class="opt-line">-->
+<!--        <el-button :dark="false" type="primary" @click="save">保存</el-button>-->
+<!--      </el-row>-->
     </el-form>
   </div>
 </template>

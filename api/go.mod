@@ -32,7 +32,7 @@ require (
 	github.com/shirou/gopsutil v3.21.11+incompatible
 	github.com/shopspring/decimal v1.3.1
 	github.com/syndtr/goleveldb v1.0.0
-	golang.org/x/image v0.15.0
+	golang.org/x/image v0.16.0
 )
 
 require (
@@ -43,15 +43,14 @@ require (
 	github.com/go-pay/util v0.0.2 // indirect
 	github.com/go-pay/xlog v0.0.2 // indirect
 	github.com/go-pay/xtime v0.0.2 // indirect
+	github.com/golang/freetype v0.0.0-20170609003504-e2365dfdc4a0 // indirect
 	github.com/golang/snappy v0.0.0-20180518054509-2e65f85255db // indirect
 	github.com/gorilla/css v1.0.0 // indirect
-	github.com/gravityblast/fresh v0.0.0-20240621171608-8d1fef547a99 // indirect
-	github.com/howeyc/fsnotify v0.9.0 // indirect
-	github.com/mattn/go-colorable v0.1.13 // indirect
-	github.com/pilu/config v0.0.0-20131214182432-3eb99e6c0b9a // indirect
-	github.com/pilu/fresh v0.0.0-20240621171608-8d1fef547a99 // indirect
+	github.com/segmentio/ksuid v1.0.4 // indirect
 	github.com/tklauser/go-sysconf v0.3.13 // indirect
 	github.com/tklauser/numcpus v0.7.0 // indirect
+	github.com/wenlng/go-captcha-assets v1.0.7 // indirect
+	github.com/wenlng/go-captcha/v2 v2.0.4 // indirect
 	github.com/yusufpapurcu/wmi v1.2.4 // indirect
 	go.uber.org/mock v0.4.0 // indirect
 )

@@ -156,8 +156,8 @@ func main() {
 
 		// 创建服务
 		fx.Provide(sms.NewSendServiceManager),
-		fx.Provide(func(config *types.AppConfig) *service.CaptchaService {
-			return service.NewCaptchaService(config.ApiConfig)
+		fx.Provide(func(config *types.AppConfig, redis *redis.Client) *service.CaptchaService {
+			return service.NewCaptchaService(config.ApiConfig, redis)
 		}),
 		fx.Provide(oss.NewUploaderManager),
 		fx.Provide(dalle.NewService),
@@ -173,7 +173,7 @@ func main() {
 		// License 服务
 		fx.Provide(service.NewLicenseService),
 		fx.Invoke(func(licenseService *service.LicenseService) {
-			// licenseService.SyncLicense()
+			licenseService.SyncLicense()
 		}),
 
 		// MidJourney service pool

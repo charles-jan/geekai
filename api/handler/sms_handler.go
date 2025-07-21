@@ -61,7 +61,10 @@ func (h *SmsHandler) SendCode(c *gin.Context) {
 		if data.X != 0 {
 			check = h.captcha.SlideCheck(data)
 		} else {
-			check = h.captcha.Check(data)
+			check = h.captcha.Check(c, service.CaptchaCheckData{
+				Key:  data.Key,
+				Dots: data.Dots,
+			})
 		}
 		if !check {
 			resp.ERROR(c, "请先完人机验证")

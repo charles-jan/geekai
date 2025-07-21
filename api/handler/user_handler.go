@@ -80,7 +80,10 @@ func (h *UserHandler) Register(c *gin.Context) {
 		if data.X != 0 {
 			check = h.captcha.SlideCheck(data)
 		} else {
-			check = h.captcha.Check(data)
+			check = h.captcha.Check(c, service.CaptchaCheckData{
+				Key:  data.Key,
+				Dots: data.Dots,
+			})
 		}
 		if !check {
 			resp.ERROR(c, "请先完人机验证")
@@ -244,14 +247,17 @@ func (h *UserHandler) Login(c *gin.Context) {
 		return
 	}
 	verifyKey := fmt.Sprintf("users/verify/%s", data.Username)
-	needVerify, err := h.redis.Get(c, verifyKey).Bool()
+	needVerify, _ := h.redis.Get(c, verifyKey).Bool()
 
 	if h.App.SysConfig.EnabledVerify && needVerify {
 		var check bool
 		if data.X != 0 {
 			check = h.captcha.SlideCheck(data)
 		} else {
-			check = h.captcha.Check(data)
+			check = h.captcha.Check(c, service.CaptchaCheckData{
+				Key:  data.Key,
+				Dots: data.Dots,
+			})
 		}
 		if !check {
 			resp.ERROR(c, "请先完人机验证")

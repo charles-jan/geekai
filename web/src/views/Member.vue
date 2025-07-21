@@ -6,15 +6,15 @@
           <user-profile :key="profileKey" />
 
           <el-row class="user-opt" :gutter="20">
-            <el-col :span="12">
-              <el-button type="primary" @click="showBindEmailDialog = true">绑定邮箱</el-button>
-            </el-col>
+<!--            <el-col :span="12">-->
+<!--              <el-button type="primary" @click="showBindEmailDialog = true">绑定邮箱</el-button>-->
+<!--            </el-col>-->
             <el-col :span="12">
               <el-button type="primary" @click="showBindMobileDialog = true">绑定手机</el-button>
             </el-col>
-            <el-col :span="12">
-              <el-button type="primary" @click="showThirdLoginDialog = true">第三方登录</el-button>
-            </el-col>
+<!--            <el-col :span="12">-->
+<!--              <el-button type="primary" @click="showThirdLoginDialog = true">第三方登录</el-button>-->
+<!--            </el-col>-->
             <el-col :span="12">
               <el-button type="primary" @click="showPasswordDialog = true">修改密码</el-button>
             </el-col>

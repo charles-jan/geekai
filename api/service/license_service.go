@@ -26,17 +26,7 @@ type LicenseService struct {
 }
 
 func NewLicenseService(server *core.AppServer, levelDB *store.LevelDB) *LicenseService {
-	// 初始化 License, 并设置为可用
-	license := types.License{
-		Key:       "your_license_key",                   // 设置合法的许可密钥
-		MachineId: "your_machine_id",                    // 设置机器 ID
-		ExpiredAt: time.Now().AddDate(100, 0, 0).Unix(), // 有效期100年
-		IsActive:  true,
-		Configs: types.LicenseConfig{
-			UserNum: 1000, // 示例配置
-			DeCopy:  true,
-		},
-	}
+	var license types.License
 	return &LicenseService{
 		config:    server.Config.ApiConfig,
 		levelDB:   levelDB,
@@ -139,11 +129,11 @@ func (s *LicenseService) fetchLicense() (*types.License, error) {
 	//}
 
 	return &types.License{
-		Key:       "abc",
-		MachineId: "abc",
+		Key:       "dapianke",
+		MachineId: "dapianke",
 		Configs: types.LicenseConfig{
 			UserNum: 10000,
-			DeCopy:  false,
+			DeCopy:  true,
 		},
 		ExpiredAt: 0,
 		IsActive:  true,

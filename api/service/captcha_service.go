@@ -12,41 +12,52 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"geekai/core/types"
-	"log"
 	"strconv"
 	"strings"
 	"time"
 
 	"github.com/go-redis/redis/v8"
 	"github.com/golang/freetype/truetype"
-	"github.com/imroc/req/v3"
 	"github.com/segmentio/ksuid"
 	"github.com/wenlng/go-captcha-assets/bindata/chars"
 	"github.com/wenlng/go-captcha-assets/resources/fonts/fzshengsksjw"
 	"github.com/wenlng/go-captcha-assets/resources/imagesv2"
+	"github.com/wenlng/go-captcha-assets/resources/tiles"
 	"github.com/wenlng/go-captcha/v2/base/option"
 	"github.com/wenlng/go-captcha/v2/click"
+	"github.com/wenlng/go-captcha/v2/slide"
 )
 
-type CaptchaService struct {
-	config   types.ApiConfig
-	client   *req.Client
-	textCapt click.Captcha
-	redis    *redis.Client
+const dataStorePrefix = "captcha:data:"
+
+type CaptchaCheckData struct {
+	Key  string `json:"key"`
+	Dots string `json:"dots"`
 }
 
-func NewCaptchaService(config types.ApiConfig, redis *redis.Client) *CaptchaService {
-	service := &CaptchaService{
-		config: config,
-		client: req.C().SetTimeout(10 * time.Second),
-		redis:  redis,
-	}
+type SlideCheckData struct {
+	Key string `json:"key"`
+	X   int    `json:"x"`
+}
+
+type CaptchaService struct {
+	textCapt  click.Captcha
+	slideCapt slide.Captcha
+	redis     *redis.Client
+}
+
+func NewCaptchaService(redis *redis.Client) *CaptchaService {
+	service := &CaptchaService{redis: redis}
 	service.init()
 	return service
 }
 
 func (service *CaptchaService) init() {
+	service.initClick()
+	service.initSlide()
+}
+
+func (service *CaptchaService) initClick() {
 	// 初始化验证码服务
 	builder := click.NewBuilder(
 		click.WithRangeLen(option.RangeVal{Min: 4, Max: 6}),
@@ -56,12 +67,12 @@ func (service *CaptchaService) init() {
 	// 加载字体资源
 	fonts, err := fzshengsksjw.GetFont()
 	if err != nil {
-		log.Fatalln("加载字体资源失败:", err)
+		logger.Errorf("加载字体资源失败: %v", err)
 	}
 
 	imgs, err := imagesv2.GetImages()
 	if err != nil {
-		log.Fatalln("加载图片资源失败:", err)
+		logger.Errorf("加载图片资源失败: %v", err)
 	}
 
 	// 设置验证码资源
@@ -75,6 +86,47 @@ func (service *CaptchaService) init() {
 	service.textCapt = builder.Make()
 }
 
+func (service *CaptchaService) initSlide() {
+	builder := slide.NewBuilder(
+		slide.WithImageSize(option.Size{Width: 310, Height: 200}),
+		slide.WithRangeDeadZoneDirections([]slide.DeadZoneDirectionType{slide.DeadZoneDirectionTypeLeft}),
+		slide.WithGenGraphNumber(2),
+		slide.WithEnableGraphVerticalRandom(true),
+	)
+
+	imgs, err := imagesv2.GetImages()
+	if err != nil {
+		logger.Errorf("加载图片资源失败: %v", err)
+	}
+
+	graphs, err := tiles.GetTiles()
+	if err != nil {
+		logger.Errorf("加载拼图资源失败: %v", err)
+	}
+
+	var newGraphs = make([]*slide.GraphImage, 0, len(graphs))
+	for i := 0; i < len(graphs); i++ {
+		graph := graphs[i]
+		newGraphs = append(newGraphs, &slide.GraphImage{
+			OverlayImage: graph.OverlayImage,
+			MaskImage:    graph.MaskImage,
+			ShadowImage:  graph.ShadowImage,
+		})
+	}
+
+	// set resources
+	builder.SetResources(
+		slide.WithGraphImages(newGraphs),
+		slide.WithBackgrounds(imgs),
+	)
+
+	service.slideCapt = builder.Make()
+
+}
+
+// ----------------------------
+// 公开方法
+// ----------------------------
 func (service *CaptchaService) Get(ctx context.Context) (interface{}, error) {
 	// 生成验证码数据
 	captData, err := service.textCapt.Generate()
@@ -103,8 +155,9 @@ func (service *CaptchaService) Get(ctx context.Context) (interface{}, error) {
 		return nil, fmt.Errorf("转换缩略图到 Base64 失败：%v", err)
 	}
 
-	key, err := service.saveDotData(ctx, dotData)
+	key, err := service.saveCaptchaData(ctx, dotData)
 	if err != nil {
+		logger.Errorf("保存验证码缓存失败：%v", err)
 		return nil, err
 	}
 
@@ -116,36 +169,18 @@ func (service *CaptchaService) Get(ctx context.Context) (interface{}, error) {
 	}, nil
 }
 
-const dotsStorePrefix = "captcha:dots:"
-
-func (service *CaptchaService) saveDotData(ctx context.Context, dotData map[int]*click.Dot) (string, error) {
-	key := GenUniqueId()
-
-	dotsByte, _ := json.Marshal(dotData)
-	_, err := service.redis.Set(ctx, dotsStorePrefix+key, dotsByte, time.Minute*5).Result()
-	if err != nil {
-		return "", fmt.Errorf("保存验证码缓存失败：%v", err)
-	}
-	return key, nil
-}
-
-type CaptchaCheckData struct {
-	Key string `json:"key"`
-	// 验证码点数据 x1,y1,x2,y2, ...
-	Dots string `json:"dots"`
-}
-
 func (service *CaptchaService) Check(ctx context.Context, data CaptchaCheckData) bool {
 
 	if data.Key == "" || data.Dots == "" {
 		return false
 	}
 
-	dct, err := service.getDotData(ctx, data.Key)
+	var dct map[int]*click.Dot
+	err := service.getCaptchaData(ctx, data.Key, &dct)
 	if err != nil {
+		logger.Debug(err)
 		return false
 	}
-	logger.Debug(dct)
 
 	src := strings.Split(data.Dots, ",")
 	if len(dct)*2 != len(src) {
@@ -164,58 +199,84 @@ func (service *CaptchaService) Check(ctx context.Context, data CaptchaCheckData)
 	return true
 }
 
-func (service *CaptchaService) getDotData(ctx context.Context, key string) (map[int]*click.Dot, error) {
-	var dct map[int]*click.Dot
-	dotsByte, err := service.redis.Get(ctx, dotsStorePrefix+key).Result()
+func (service *CaptchaService) SlideGet(ctx context.Context) (interface{}, error) {
+
+	captData, err := service.slideCapt.Generate()
 	if err != nil {
+		return nil, fmt.Errorf("生成验证码失败: %v", err)
+	}
+
+	bgImg, err := captData.GetMasterImage().ToBase64()
+	if err != nil {
+		return nil, fmt.Errorf("获取验证码图片失败: %v", err)
+	}
+
+	bkImg, err := captData.GetTileImage().ToBase64()
+	if err != nil {
+		return nil, fmt.Errorf("获取验证码拼图失败: %v", err)
+	}
+
+	blockData := captData.GetData()
+	if blockData == nil {
+		return nil, errors.New("验证码数据获取失败")
+	}
+
+	key, err := service.saveCaptchaData(ctx, blockData)
+	if err != nil {
+		logger.Errorf("保存验证码缓存失败：%v", err)
 		return nil, err
 	}
 
-	err = json.Unmarshal([]byte(dotsByte), &dct)
-	return dct, err
+	return map[string]any{
+		"key":   key,
+		"bgImg": bgImg,
+		"bkImg": bkImg,
+		"y":     blockData.Y,
+	}, nil
 }
 
-func (service *CaptchaService) SlideGet() (interface{}, error) {
-	if service.config.Token == "" {
-		return nil, errors.New("无效的 API Token")
-	}
+func (service *CaptchaService) SlideCheck(ctx context.Context, data SlideCheckData) bool {
 
-	url := fmt.Sprintf("%s/api/captcha/slide/get", service.config.ApiURL)
-	var res types.BizVo
-	r, err := service.client.R().
-		SetHeader("AppId", service.config.AppId).
-		SetHeader("Authorization", fmt.Sprintf("Bearer %s", service.config.Token)).
-		SetSuccessResult(&res).Get(url)
-	if err != nil || r.IsErrorState() {
-		return nil, fmt.Errorf("请求 API 失败：%v", err)
-	}
-
-	if res.Code != types.Success {
-		return nil, fmt.Errorf("请求 API 失败：%s", res.Message)
-	}
-
-	return res.Data, nil
-}
-
-func (service *CaptchaService) SlideCheck(data interface{}) bool {
-	url := fmt.Sprintf("%s/api/captcha/slide/check", service.config.ApiURL)
-	var res types.BizVo
-	r, err := service.client.R().
-		SetHeader("AppId", service.config.AppId).
-		SetHeader("Authorization", fmt.Sprintf("Bearer %s", service.config.Token)).
-		SetBodyJsonMarshal(data).
-		SetSuccessResult(&res).Post(url)
-	if err != nil || r.IsErrorState() {
+	if data.Key == "" || data.X < 0 {
 		return false
 	}
 
-	if res.Code != types.Success {
+	var dct *slide.Block
+	err := service.getCaptchaData(ctx, data.Key, &dct)
+	if err != nil {
+		logger.Debug(err)
 		return false
 	}
 
-	return true
+	return slide.Validate(data.X, 0, dct.X, 0, 5)
 }
 
+// ----------------------------
+// 私有方法
+// ----------------------------
+func (service *CaptchaService) saveCaptchaData(ctx context.Context, captchaData interface{}) (string, error) {
+	key := GenUniqueId()
+
+	dotsByte, _ := json.Marshal(captchaData)
+	_, err := service.redis.Set(ctx, dataStorePrefix+key, dotsByte, time.Minute*5).Result()
+	if err != nil {
+		return "", fmt.Errorf("保存验证码缓存失败：%v", err)
+	}
+	return key, nil
+}
+
+func (service *CaptchaService) getCaptchaData(ctx context.Context, key string, dest interface{}) error {
+	dotsByte, err := service.redis.Get(ctx, dataStorePrefix+key).Result()
+	if err != nil {
+		return fmt.Errorf("获取缓存失败: %w", err)
+	}
+
+	return json.Unmarshal([]byte(dotsByte), dest)
+}
+
+// ----------------------------
+// 工具函数
+// ----------------------------
 func GenUniqueId() string {
 	return ksuid.New().String()
 }

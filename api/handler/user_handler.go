@@ -16,9 +16,10 @@ import (
 	"geekai/store/vo"
 	"geekai/utils"
 	"geekai/utils/resp"
-	"github.com/imroc/req/v3"
 	"strings"
 	"time"
+
+	"github.com/imroc/req/v3"
 
 	"github.com/go-redis/redis/v8"
 	"github.com/golang-jwt/jwt/v5"
@@ -78,7 +79,10 @@ func (h *UserHandler) Register(c *gin.Context) {
 	if h.App.SysConfig.EnabledVerify && data.RegWay == "username" {
 		var check bool
 		if data.X != 0 {
-			check = h.captcha.SlideCheck(data)
+			check = h.captcha.SlideCheck(c, service.SlideCheckData{
+				Key: data.Key,
+				X:   data.X,
+			})
 		} else {
 			check = h.captcha.Check(c, service.CaptchaCheckData{
 				Key:  data.Key,
@@ -187,7 +191,7 @@ func (h *UserHandler) Register(c *gin.Context) {
 		if h.App.SysConfig.InvitePower > 0 {
 			err := h.userService.IncreasePower(int(inviteCode.UserId), h.App.SysConfig.InvitePower, model.PowerLog{
 				Type:   types.PowerInvite,
-				Model: "Invite",
+				Model:  "Invite",
 				Remark: fmt.Sprintf("邀请用户注册奖励，金额：%d，邀请码：%s，新用户：%s", h.App.SysConfig.InvitePower, inviteCode.Code, user.Username),
 			})
 			if err != nil {
@@ -252,7 +256,10 @@ func (h *UserHandler) Login(c *gin.Context) {
 	if h.App.SysConfig.EnabledVerify && needVerify {
 		var check bool
 		if data.X != 0 {
-			check = h.captcha.SlideCheck(data)
+			check = h.captcha.SlideCheck(c, service.SlideCheckData{
+				Key: data.Key,
+				X:   data.X,
+			})
 		} else {
 			check = h.captcha.Check(c, service.CaptchaCheckData{
 				Key:  data.Key,

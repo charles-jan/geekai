@@ -10,6 +10,7 @@
         v-if="isMobileInternal"
         :bg-img="bgImg"
         :bk-img="bkImg"
+        :bk-top="blockTop"
         :result="result"
         @refresh="getSlideCaptcha"
         @confirm="handleSlideConfirm"
@@ -100,6 +101,7 @@ const loadCaptcha = () => {
 // 滑动验证码
 const bgImg = ref("");
 const bkImg = ref("");
+const blockTop = ref(0); 
 const result = ref(0);
 
 const getSlideCaptcha = () => {
@@ -108,6 +110,7 @@ const getSlideCaptcha = () => {
     .then((res) => {
       bkImg.value = res.data.bkImg;
       bgImg.value = res.data.bgImg;
+      blockTop.value = res.data.y;
       captKey.value = res.data.key;
     })
     .catch((e) => {

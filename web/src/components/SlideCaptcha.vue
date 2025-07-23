@@ -11,7 +11,7 @@
           <el-icon><Refresh /></el-icon>
         </div>
         <span class="block">
-          <el-image :src="blockImg" :style="{ left: blockLeft + 'px' }" />
+          <el-image :src="blockImg" :style="{ left: blockLeft + 'px', top: blockTop + 'px' }" />
         </span>
       </div>
 
@@ -41,6 +41,7 @@ import { ArrowRightBold, CircleCheckFilled, CircleCloseFilled, Refresh } from "@
 const props = defineProps({
   bgImg: String,
   bkImg: String,
+  bkTop: Number,
   result: Number,
 });
 
@@ -53,6 +54,7 @@ const backgroundImg = ref("");
 const blockImg = ref("");
 const leftBarWidth = ref(0);
 const blockLeft = ref(0);
+const blockTop = ref(0);
 const checked = ref(0);
 const time = ref("");
 
@@ -66,6 +68,12 @@ watch(
   () => props.bkImg,
   (newVal) => {
     blockImg.value = newVal;
+  }
+);
+watch(
+  () => props.bkTop,
+  (newVal) => {
+    blockTop.value = newVal;
   }
 );
 watch(

@@ -59,7 +59,10 @@ func (h *SmsHandler) SendCode(c *gin.Context) {
 	if h.App.SysConfig.EnabledVerify {
 		var check bool
 		if data.X != 0 {
-			check = h.captcha.SlideCheck(data)
+			check = h.captcha.SlideCheck(c, service.SlideCheckData{
+				Key: data.Key,
+				X:   data.X,
+			})
 		} else {
 			check = h.captcha.Check(c, service.CaptchaCheckData{
 				Key:  data.Key,

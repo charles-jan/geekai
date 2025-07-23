@@ -156,9 +156,7 @@ func main() {
 
 		// 创建服务
 		fx.Provide(sms.NewSendServiceManager),
-		fx.Provide(func(config *types.AppConfig, redis *redis.Client) *service.CaptchaService {
-			return service.NewCaptchaService(config.ApiConfig, redis)
-		}),
+		fx.Provide(service.NewCaptchaService),
 		fx.Provide(oss.NewUploaderManager),
 		fx.Provide(dalle.NewService),
 		fx.Invoke(func(s *dalle.Service) {

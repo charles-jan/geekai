@@ -55,7 +55,7 @@ func (h *CaptchaHandler) Check(c *gin.Context) {
 
 // SlideGet 获取滑动验证图片
 func (h *CaptchaHandler) SlideGet(c *gin.Context) {
-	data, err := h.service.SlideGet()
+	data, err := h.service.SlideGet(c)
 	if err != nil {
 		resp.ERROR(c, err.Error())
 		return
@@ -66,16 +66,14 @@ func (h *CaptchaHandler) SlideGet(c *gin.Context) {
 
 // SlideCheck 滑动验证结果校验
 func (h *CaptchaHandler) SlideCheck(c *gin.Context) {
-	var data struct {
-		Key string `json:"key"`
-		X   int    `json:"x"`
-	}
+	var data service.SlideCheckData
+
 	if err := c.ShouldBindJSON(&data); err != nil {
 		resp.ERROR(c, types.InvalidArgs)
 		return
 	}
 
-	if h.service.SlideCheck(data) {
+	if h.service.SlideCheck(c, data) {
 		resp.SUCCESS(c)
 	} else {
 		resp.ERROR(c)

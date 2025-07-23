@@ -5,12 +5,14 @@ import (
 	"geekai/core/types"
 	"geekai/service"
 	"testing"
+
+	"github.com/go-redis/redis/v8"
 )
 
 func TestCaptchaService_Get(t *testing.T) {
 
 	// 初始化服务
-	captchaService := service.NewCaptchaService(types.ApiConfig{})
+	captchaService := service.NewCaptchaService(redis.NewClient())
 
 	// 调用 Get 方法生成验证码
 	result, err := captchaService.Get(context.Background())

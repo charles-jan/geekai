@@ -9,3 +9,6 @@ node_modules
 dist
 dist.tar.gz
 
+# Claude
+.claude
+CLAUDE.md

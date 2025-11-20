@@ -242,49 +242,65 @@ func (h *UserHandler) Login(c *gin.Context) {
 	var data struct {
 		Username string `json:"username"`
 		Password string `json:"password"`
-		Key      string `json:"key,omitempty"`
-		Dots     string `json:"dots,omitempty"`
-		X        int    `json:"x,omitempty"`
+		Mobile   string `json:"mobile"`
+		Code     string `json:"code"`
 	}
 	if err := c.ShouldBindJSON(&data); err != nil {
 		resp.ERROR(c, types.InvalidArgs)
 		return
 	}
-	verifyKey := fmt.Sprintf("users/verify/%s", data.Username)
-	needVerify, _ := h.redis.Get(c, verifyKey).Bool()
-
-	if h.App.SysConfig.EnabledVerify && needVerify {
-		var check bool
-		if data.X != 0 {
-			check = h.captcha.SlideCheck(c, service.SlideCheckData{
-				Key: data.Key,
-				X:   data.X,
-			})
-		} else {
-			check = h.captcha.Check(c, service.CaptchaCheckData{
-				Key:  data.Key,
-				Dots: data.Dots,
-			})
-		}
-		if !check {
-			resp.ERROR(c, "请先完人机验证")
-			return
-		}
-	}
 
 	var user model.User
-	res := h.DB.Where("username = ?", data.Username).First(&user)
-	if res.Error != nil {
-		h.redis.Set(c, verifyKey, true, 0)
-		resp.ERROR(c, "用户名不存在")
-		return
-	}
+	if h.App.SysConfig.EnabledVerify {
+		// 手机号+验证码登录
+		if data.Mobile == "" {
+			resp.ERROR(c, "请输入手机号码")
+			return
+		}
+		if data.Code == "" {
+			resp.ERROR(c, "请输入验证码")
+			return
+		}
 
-	password := utils.GenPassword(data.Password, user.Salt)
-	if password != user.Password {
-		h.redis.Set(c, verifyKey, true, 0)
-		resp.ERROR(c, "用户名或密码错误")
-		return
+		// 验证短信验证码
+		key := CodeStorePrefix + data.Mobile
+		code, err := h.redis.Get(c, key).Result()
+		if err != nil || code != data.Code {
+			resp.ERROR(c, "验证码错误")
+			return
+		}
+
+		// 通过手机号查询用户
+		res := h.DB.Where("mobile = ?", data.Mobile).First(&user)
+		if res.Error != nil {
+			resp.ERROR(c, "该手机号未注册")
+			return
+		}
+
+		// 删除已使用的验证码
+		h.redis.Del(c, key)
+	} else {
+		// 用户名+密码登录
+		if data.Username == "" {
+			resp.ERROR(c, "请输入用户名")
+			return
+		}
+		if data.Password == "" {
+			resp.ERROR(c, "请输入密码")
+			return
+		}
+
+		res := h.DB.Where("username = ?", data.Username).First(&user)
+		if res.Error != nil {
+			resp.ERROR(c, "用户名不存在")
+			return
+		}
+
+		password := utils.GenPassword(data.Password, user.Salt)
+		if password != user.Password {
+			resp.ERROR(c, "用户名或密码错误")
+			return
+		}
 	}
 
 	if user.Status == false {
@@ -320,8 +336,6 @@ func (h *UserHandler) Login(c *gin.Context) {
 		resp.ERROR(c, "error with save token: "+err.Error())
 		return
 	}
-	// 移除登录行为验证码
-	h.redis.Del(c, verifyKey)
 	resp.SUCCESS(c, gin.H{"token": tokenString, "user_id": user.Id, "username": user.Username})
 }
 

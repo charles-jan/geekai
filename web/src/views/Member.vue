@@ -29,6 +29,16 @@
             <el-alert type="success" show-icon :closable="false" effect="dark"> <strong>说明:</strong> {{ vipInfoText }} </el-alert>
           </div>
 
+          <div class="agreement-notice">
+            <el-alert type="warning" :closable="false" show-icon>
+              <template #default>
+                <span>充值前请仔细阅读 </span>
+                <router-link to="/agreement" target="_blank" class="agreement-link">《服务条款与免责声明》</router-link>
+                <span>，充值即表示您已阅读并同意相关条款</span>
+              </template>
+            </el-alert>
+          </div>
+
           <el-row v-if="list.length > 0" :gutter="20" class="list-box">
             <el-col v-for="item in list" :key="item" :span="6">
               <div class="product-item">

@@ -144,6 +144,12 @@ const routes = [
     component: () => import("@/views/Resetpassword.vue"),
   },
   {
+    name: "agreement",
+    path: "/agreement",
+    meta: { title: "服务条款与免责声明" },
+    component: () => import("@/views/Agreement.vue"),
+  },
+  {
     path: "/admin/login",
     name: "admin-login",
     meta: { title: "控制台登录" },
